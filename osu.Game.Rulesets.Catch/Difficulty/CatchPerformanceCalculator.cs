@@ -15,7 +15,7 @@ namespace osu.Game.Rulesets.Catch.Difficulty
 {
     public class CatchPerformanceCalculator : PerformanceCalculator
     {
-        protected new CatchDifficultyAttributes Attributes => (CatchDifficultyAttributes)base.Attributes;
+        protected CatchDifficultyAttributes Attributes;
 
         private Mod[] mods;
         private int countGreat;
@@ -26,8 +26,10 @@ namespace osu.Game.Rulesets.Catch.Difficulty
         public CatchPerformanceCalculator(Ruleset ruleset, WorkingBeatmap beatmap, ScoreInfo score)
             : base(ruleset, beatmap, score) { }
 
-        public override double Calculate(Dictionary<string, double> categoryDifficulty = null)
+        public override double Calculate(Dictionary<string, double> categoryDifficulty = null, double upTo = double.PositiveInfinity)
         {
+            Attributes = (CatchDifficultyAttributes)Ruleset.CreateDifficultyCalculator(Working).Calculate(upTo, Score.Mods);
+
             mods = Score.Mods;
             countGreat = Convert.ToInt32(Score.Statistics[HitResult.Great]);
             countGood = Convert.ToInt32(Score.Statistics[HitResult.Good]);
