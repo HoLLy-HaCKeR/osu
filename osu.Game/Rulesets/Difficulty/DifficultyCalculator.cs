@@ -27,7 +27,15 @@ namespace osu.Game.Rulesets.Difficulty
         /// </summary>
         /// <param name="mods">The mods that should be applied to the beatmap.</param>
         /// <returns>A structure describing the difficulty of the beatmap.</returns>
-        public DifficultyAttributes Calculate(params Mod[] mods)
+        public DifficultyAttributes Calculate(params Mod[] mods) => Calculate(Double.PositiveInfinity, mods);
+
+        /// <summary>
+        /// Calculates the difficulty of the beatmap up to a given point using a specific mod combination.
+        /// </summary>
+        /// <param name="upTo">The time up to which hit objects should be considered.</param>
+        /// <param name="mods">The mods that should be applied to the beatmap.</param>
+        /// <returns>A structure describing the difficulty of the beatmap.</returns>
+        public DifficultyAttributes Calculate(double upTo, params Mod[] mods)
         {
             beatmap.Mods.Value = mods;
             IBeatmap playableBeatmap = beatmap.GetPlayableBeatmap(ruleset.RulesetInfo);
@@ -35,21 +43,22 @@ namespace osu.Game.Rulesets.Difficulty
             var clock = new StopwatchClock();
             mods.OfType<IApplicableToClock>().ForEach(m => m.ApplyToClock(clock));
 
-            return Calculate(playableBeatmap, mods, clock.Rate);
+            return Calculate(playableBeatmap, mods, clock.Rate, upTo);
         }
 
         /// <summary>
         /// Calculates the difficulty of the beatmap using all mod combinations applicable to the beatmap.
         /// </summary>
+        /// <param name="upTo">The time up to which hit objects should be considered.</param>
         /// <returns>A collection of structures describing the difficulty of the beatmap for each mod combination.</returns>
-        public IEnumerable<DifficultyAttributes> CalculateAll()
+        public IEnumerable<DifficultyAttributes> CalculateAll(double upTo = Double.PositiveInfinity)
         {
             foreach (var combination in CreateDifficultyAdjustmentModCombinations())
             {
                 if (combination is MultiMod multi)
-                    yield return Calculate(multi.Mods);
+                    yield return Calculate(upTo, multi.Mods);
                 else
-                    yield return Calculate(combination);
+                    yield return Calculate(upTo, combination);
             }
         }
 
@@ -101,7 +110,8 @@ namespace osu.Game.Rulesets.Difficulty
         /// <param name="beatmap">The <see cref="IBeatmap"/> to compute the difficulty for.</param>
         /// <param name="mods">The <see cref="Mod"/>s that should be applied.</param>
         /// <param name="timeRate">The rate of time in <paramref name="beatmap"/>.</param>
+        /// <param name="upTo">The time up to which hit objects should be considered.</param>
         /// <returns>A structure containing the difficulty attributes.</returns>
-        protected abstract DifficultyAttributes Calculate(IBeatmap beatmap, Mod[] mods, double timeRate);
+        protected abstract DifficultyAttributes Calculate(IBeatmap beatmap, Mod[] mods, double timeRate, double upTo = Double.PositiveInfinity);
     }
 }
